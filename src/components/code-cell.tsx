@@ -4,10 +4,33 @@ import Previerw from './Preview';
 import bundle from '../bundler';
 import Resizable from './resizable';
 
+const initialvalue = `import React from "react";
+import ReactDOM from "react-dom/client";
+
+const el = document.getElementById("root");
+const root = ReactDOM.createRoot(el);
+
+const App = () => {
+  return <h1>Hello world!</h1>;
+};
+
+root.render(<App />);
+`
+
 const CodeCell = () => {
   const [code, setCode] = useState('');
   const [input, setInput] = useState('');
   const [err, setErr] = useState('');
+
+  useEffect(() => {
+    firstBundle()
+  }, []);
+
+  const firstBundle = async () => {
+    const output = await bundle(initialvalue);
+    setCode(output.code);
+    setErr(output.err);
+  };
 
   useEffect(() => {
     const timer = setTimeout( async() => {
@@ -27,7 +50,7 @@ const CodeCell = () => {
       <div style={{height: '100%', display: 'flex', flexDirection: 'row'}}>
         <Resizable direction='horizontal'>
           <CodeEditor
-            initialValue="const a = 1;"
+            initialValue={initialvalue}
             onChange={(value) => setInput(value)}
           />
         </Resizable>
