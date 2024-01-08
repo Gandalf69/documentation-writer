@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import CodeEditor from './code-editor';
 import Previerw from './Preview';
-import bundle from '../bundler';
 import Resizable from './resizable';
 import { Cell } from '../redux';
 import { useActions } from '../hooks/useActions';
+import { useTypedSelector } from '../hooks/useTypedSelector';
 
 const initialvalue = `import React from "react";
 import ReactDOM from "react-dom/client";
@@ -24,35 +24,30 @@ interface CodeCellProps {
 } 
 
 const CodeCell: React.FC<CodeCellProps> = ({ cell }) => {
-  const [code, setCode] = useState('');
-  const [err, setErr] = useState('');
-
-  const { updateCell } = useActions();
+  const { updateCell, createBundle } = useActions();
+  const bundle = useTypedSelector((state) => state.bundles[cell.id])
 
   useEffect(() => {
-    if(!cell.content)
+    if(!bundle || (bundle && !bundle.code))
       updateCell(cell.id, initialvalue)
-    firstBundle()
+
+    //createBundle(cell.id, cell.content)
   }, []);
 
-  const firstBundle = async () => {
-    const output = await bundle(cell.content);
-    setCode(output.code);
-    setErr(output.err);
-  };
+  // const firstBundle = async () => {
+  //   const output = await bundle(cell.content);
+  // };
 
   useEffect(() => {
     const timer = setTimeout( async() => {
-      const output = await bundle(cell.content);
-      setCode(output.code);
-      setErr(output.err);
-    }, 1000)
+      createBundle(cell.id, cell.content)
+    }, 750)
 
     return () => {
       clearTimeout(timer)
     }
 
-  }, [cell.content]);
+  }, [cell.content, cell.id, createBundle]);
 
   return (
     <Resizable direction='vertical'>
@@ -63,7 +58,10 @@ const CodeCell: React.FC<CodeCellProps> = ({ cell }) => {
             onChange={(value) => updateCell(cell.id, value)}
           />
         </Resizable>
-        <Previerw code={code} bundlingStatus={err} />
+        {
+          bundle && <Previerw code={bundle.code} bundlingStatus={bundle.err} />
+        }
+        
       </div>
     </Resizable>
   );
