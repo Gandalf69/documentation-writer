@@ -19,6 +19,19 @@ const initialState: CellsState = {
     data: {}
 }
 
+const initialCellValue = `import React from "react";
+import ReactDOM from "react-dom/client";
+
+const el = document.getElementById("root");
+const root = ReactDOM.createRoot(el);
+
+const App = () => {
+  return <h1>Hello world!</h1>;
+};
+
+root.render(<App />);
+`
+
 const reducer = produce((state: CellsState = initialState, action: Action): CellsState => {
     switch (action.type) {
         case ActionType.UPDATE_CELL:
@@ -45,10 +58,12 @@ const reducer = produce((state: CellsState = initialState, action: Action): Cell
             return state;
         case ActionType.MOVE_CELL:
             const { direction } = action.payload;
-            const index = state.order.findIndex(id => id === action.payload.id);
+            const index = state.order.findIndex((id) => id === action.payload.id);
             const targetIndex = direction === 'up' ? index - 1 : index + 1;
-            if(targetIndex < 0 || targetIndex > state.order.length -1 || state.order.length == 1)
+
+            if (targetIndex < 0 || targetIndex > state.order.length - 1) {
                 return state;
+            }
 
             state.order[index] = state.order[targetIndex];
             state.order[targetIndex] = action.payload.id;
@@ -60,6 +75,9 @@ const reducer = produce((state: CellsState = initialState, action: Action): Cell
                 type: action.payload.type,
                 id: randomId()
             };
+
+            if(cell.type === 'code')
+                cell.content = initialCellValue;
 
             state.data[cell.id] = cell;
 

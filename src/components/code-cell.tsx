@@ -1,3 +1,4 @@
+import './code-cell.css';
 import { useEffect } from 'react';
 import CodeEditor from './code-editor';
 import Previerw from './Preview';
@@ -6,18 +7,7 @@ import { Cell } from '../redux';
 import { useActions } from '../hooks/useActions';
 import { useTypedSelector } from '../hooks/useTypedSelector';
 
-const initialvalue = `import React from "react";
-import ReactDOM from "react-dom/client";
 
-const el = document.getElementById("root");
-const root = ReactDOM.createRoot(el);
-
-const App = () => {
-  return <h1>Hello world!</h1>;
-};
-
-root.render(<App />);
-`
 
 interface CodeCellProps {
   cell: Cell
@@ -27,26 +17,31 @@ const CodeCell: React.FC<CodeCellProps> = ({ cell }) => {
   const { updateCell, createBundle } = useActions();
   const bundle = useTypedSelector((state) => state.bundles[cell.id])
 
+  const cells = useTypedSelector((state) => state.cells)
+  const findCellOrder = cells.order.findIndex(id => id === cell.id)
+  
   useEffect(() => {
-    if(!bundle || (bundle && !bundle.code))
-      updateCell(cell.id, initialvalue)
+    if(bundle)
+      createBundle(cell.id, cell.content);
 
-    //createBundle(cell.id, cell.content)
-  }, []);
-
-  // const firstBundle = async () => {
-  //   const output = await bundle(cell.content);
-  // };
+  }, [findCellOrder])
 
   useEffect(() => {
+    if(!bundle)
+    {
+      createBundle(cell.id, cell.content);
+      return;
+    }
+
     const timer = setTimeout( async() => {
-      createBundle(cell.id, cell.content)
+      createBundle(cell.id, cell.content);
     }, 750)
 
     return () => {
       clearTimeout(timer)
     }
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cell.content, cell.id, createBundle]);
 
   return (
@@ -58,10 +53,17 @@ const CodeCell: React.FC<CodeCellProps> = ({ cell }) => {
             onChange={(value) => updateCell(cell.id, value)}
           />
         </Resizable>
+        <div className='progress-wrapper'>
         {
-          bundle && <Previerw code={bundle.code} bundlingStatus={bundle.err} />
-        }
-        
+          !bundle || bundle.loading ? 
+            <div className='progress-cover'>
+              <progress className='progress is-small is-primary' max='100'>
+                Loading
+              </progress>
+            </div>
+          : <Previerw code={bundle.code} bundlingStatus={bundle.err} />
+        }  
+        </div>      
       </div>
     </Resizable>
   );
