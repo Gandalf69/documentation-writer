@@ -20,7 +20,7 @@ export const useCumulativeCode = (cellId: string) => {
                 root.innerHTML = JSON.stringify(value);
             }
             } else {
-            root.innerHTML = value;
+                root.innerHTML = value;
             }
         };
         `;
